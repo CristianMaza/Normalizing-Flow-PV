@@ -36,15 +36,25 @@ def plf_per_quantile(quantiles:np.array, y_true:np.array):
     :param y_true:  (nb_periods,)
     :return: PLF per quantile into an array (nb_quantiles, )
     """
+    # Print shapes of the arrays
+    print("Shape of quantiles:", quantiles.shape)
+    print("Shape of y_true:", y_true.shape)
+
     # quantile q from 0 to N_q -> add 1 to be from 1 to N_q into the PLF score
     N_q = quantiles.shape[1]
     plf = []
     for q in range(0 ,N_q):
         # for a given quantile compute the PLF over the entire dataset
         diff = y_true - quantiles[:,q]
+
+        # Print the shape of diff and the value of q
+        print("Shape of diff:", diff.shape)
+        print("Value of q:", q)
+
         plf_q = sum(diff[diff >= 0] * ((q+1) / (N_q+1))) / len(diff) + sum(-diff[diff < 0] * (1 - (q+1) / (N_q+1))) / len(diff) # q from 0 to N_q-1 -> add 1 to be from 1 to N_q
         plf.append(plf_q)
     return 100 * np.asarray(plf)
+
 
 def plot_plf_per_quantile(plf_VS: np.array, plf_TEST: np.array, dir_path: str, name: str, ymax:float=None):
     """
@@ -106,7 +116,7 @@ def compute_reliability(y_true: np.array, y_quantile: np.array, tag: str = 'pv')
     nb_q = y_quantile[0].shape[0]
 
     aq = []
-    if tag == 'pv':
+    if tag == 'pv' or tag == 'load':
         # WARNING REMOVE TIME PERIODS WHERE PV GENERATION IS 0 during night hours !!!!
         # indices where PV generation is 0 at day d
         indices = np.where(y_true == 0)[0]
@@ -450,10 +460,7 @@ def quality_comparison_per_track(dir_path: str, N_q: int, df_y: pd.DataFrame, na
     # --------------------------------------------------------------------------------------------------------------
     for q, s, model in zip(quantiles_list, scenarios_list, labels):
         plot_multi_days_scenarios(quantiles=q, scenarios=s, y_true=y_true, dir_path=dir_path, name='TEST_zone_1_multi_' + name + '_' + model, n_s=50, ylim=1)
-        if tag == 'load':
-            ylim = [0.2, 0.9]
-        else:
-            ylim = [0, 1]
+        ylim = [0, 1]
         plot_scenarios(quantiles=q, scenarios=s, y_true=y_true, dir_path=dir_path, name='TEST_zone_1_' + name + '_' + model, n_s=50, n_days=1, ylim=ylim)
 
 

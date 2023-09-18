@@ -93,7 +93,7 @@ print('#LS %s days #VS %s days # TEST %s days' % (nb_days_LS/nb_zones, nb_days_V
 x_LS_scaled, y_LS_scaled, x_VS_scaled, y_VS_scaled, x_TEST_scaled, y_TEST_scaled, y_LS_scaler = scale_data_multi(x_LS=df_x_LS.values, y_LS=df_y_LS.values, x_VS=df_x_VS.values, y_VS=df_y_VS.values, x_TEST=df_x_TEST.values, y_TEST=df_y_TEST.values)
 
 non_null_indexes = list(np.delete(np.asarray([i for i in range(24)]), indices))
-
+print('non_null_indexes', len(non_null_indexes))
 # Rebuilt the PV observations with the removed time periods
 df_y_TEST.columns = non_null_indexes
 for i in indices:
@@ -268,10 +268,10 @@ for config in [cf_AN_M, cf_UMNN_M]:
     start = timer()
     s_TEST = build_nfs_scenarios(n_s=n_s, x=x_TEST_scaled,
                                  y_scaler=y_LS_scaler, flow=best_flow,
-                                 conditioner_args=config['conditioner_args'], max=max_power, gpu=gpu, tag=tag, non_null_indexes=non_null_indexes)
+                                 conditioner_args=config['conditioner_args'], max=max_power, gpu=gpu, non_null_indexes=non_null_indexes)
     s_VS = build_nfs_scenarios(n_s=n_s, x=x_VS_scaled,
                                 y_scaler=y_LS_scaler, flow=best_flow,
-                                conditioner_args=config['conditioner_args'], max=max_power, gpu=gpu, tag=tag, non_null_indexes=non_null_indexes)
+                                conditioner_args=config['conditioner_args'], max=max_power, gpu=gpu, non_null_indexes=non_null_indexes)
     # s_LS = build_nfs_scenarios(n_s=n_s, x=x_LS_scaled,
     #                             y_scaler=y_LS_scaler, flow=best_flow,
     #                              conditioner_args=config['conditioner_args'], max=max_power, gpu=gpu, tag=tag, non_null_indexes=non_null_indexes)
