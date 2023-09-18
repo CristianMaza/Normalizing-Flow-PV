@@ -12,6 +12,24 @@ import wandb
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 from sklearn.model_selection import train_test_split
 
+def periods_where_load_is_null(df_inputs:pd.DataFrame):
+    """
+    Compute the time periods where the PV generation is always 0 for the solar track.
+    :param df_inputs: solar track data.
+    :return: indices where PV is always 0.
+    """
+    print(len(df_inputs))
+    # Determine time periods where PV generation is 0
+    nb_days = int(df_inputs['LOAD'].shape[0] / (24)) 
+    print(nb_days)
+    max_power = df_inputs['LOAD'].values.reshape(nb_days, 24).max(axis=0) # reshape to match new intervals
+
+    indices = np.where(max_power == 0)[0]
+
+    print('Indices where PV is always 0:', indices)
+
+    return indices
+
 def periods_where_pv_is_null(df_inputs:pd.DataFrame):
     """
     Compute the time periods where the PV generation is always 0 for the solar track.
@@ -100,14 +118,14 @@ def load_data(path_name: str, random_state: int = 0, test_size:int=2*12*2):
     Build the load power data for the GEFcom IJF_paper case study.
     """
     df_load = pd.read_csv(path_name, parse_dates=True, index_col=0)
-    features = ['w1', 'w2', 'w3', 'w4', 'w5', 'w6', 'w7', 'w8', 'w9', 'w10',
-                'w11', 'w12', 'w13', 'w14', 'w15', 'w16', 'w17', 'w18', 'w19', 'w20',
-                'w21', 'w22', 'w23', 'w24', 'w25']
+    features = ["Wind 2m (m/s)", "Wind direction (g)", "Relative humidity (%)", "Temperature (C)", "Pressure (hPa)", "Azimuth", "Zenith", "CloudOpacity"]
     max_load = df_load['LOAD'].max()
+    indices = periods_where_load_is_null(df_inputs=df_load)
 
     nb_days = int(len(df_load) / 24)
     x = np.concatenate([df_load[col].values.reshape(nb_days, 24) for col in features], axis=1)
     y = df_load['LOAD'].values.reshape(nb_days, 24) / max_load
+    y = np.delete(y, indices, axis=1)
     df_y = pd.DataFrame(data=y, index=df_load['LOAD'].asfreq('D').index)
     df_x = pd.DataFrame(data=x, index=df_load['LOAD'].asfreq('D').index)
 
@@ -122,7 +140,7 @@ def load_data(path_name: str, random_state: int = 0, test_size:int=2*12*2):
     nb_days_TEST = len(df_y_TEST)
     print('#LS %s days #VS %s days # TEST %s days' % (nb_days_LS, nb_days_VS, nb_days_TEST))
 
-    return df_x_LS, df_y_LS, df_x_VS, df_y_VS, df_x_TEST, df_y_TEST
+    return df_x_LS, df_y_LS, df_x_VS, df_y_VS, df_x_TEST, df_y_TEST, indices
 
 
 def build_pv_features(df_var:pd.DataFrame, indices:np.array):
